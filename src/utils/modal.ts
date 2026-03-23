@@ -1,11 +1,12 @@
 import {
     ActionRowBuilder,
+    ModalActionRowComponentBuilder,
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle,
 } from "discord.js";
 
-export const getModal = (description: string) => {
+export const getIssueModal = (description: string) => {
     const modal = new ModalBuilder()
         .setTitle("Create github issue")
         .setCustomId("AwesomeForm");
@@ -22,11 +23,10 @@ export const getModal = (description: string) => {
         .setValue(description);
 
     const rows = [issueTitle, issueDescription].map((component) =>
-        new ActionRowBuilder<TextInputBuilder>().addComponents([component])
+        new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(component)
     );
 
-    // Add action rows to form
-    modal.addComponents(rows);
+    modal.addComponents(...rows);
 
     return modal;
 };
