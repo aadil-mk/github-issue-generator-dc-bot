@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import { ENV } from "../utils/constants";
+import { ENV } from "../config/env";
 
 const octokit = new Octokit({
     auth: ENV.GITHUB_ACCESS_TOKEN,

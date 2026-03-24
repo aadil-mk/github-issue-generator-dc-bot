@@ -11,6 +11,13 @@ export const getIssueModal = (description: string) => {
         .setTitle("Create github issue")
         .setCustomId("AwesomeForm");
 
+    const requestType = new TextInputBuilder()
+        .setStyle(TextInputStyle.Short)
+        .setCustomId("requestType")
+        .setLabel("Request type (Fix, Feat, etc.)")
+        .setPlaceholder("e.g. Fix, Feat")
+        .setRequired(true);
+
     const issueTitle = new TextInputBuilder()
         .setStyle(TextInputStyle.Short)
         .setCustomId("issueTitle")
@@ -22,7 +29,7 @@ export const getIssueModal = (description: string) => {
         .setLabel("Issue description")
         .setValue(description);
 
-    const rows = [issueTitle, issueDescription].map((component) =>
+    const rows = [requestType, issueTitle, issueDescription].map((component) =>
         new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(component)
     );
 
