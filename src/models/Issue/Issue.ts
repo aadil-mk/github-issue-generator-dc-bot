@@ -1,12 +1,6 @@
 import { Schema, model } from "mongoose";
+import { IIssue } from "./IIssue";
 
-export interface IIssue {
-    issueLink: string;
-    requestedById: string;
-    requestedByUsername: string;
-    title: string;
-    description: string;
-}
 
 const issueSchema = new Schema<IIssue>({
     issueLink: { type: String, required: true },

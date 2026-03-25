@@ -21,13 +21,14 @@ export const handleInteraction = async (interaction: Interaction) => {
             }
         }
 
-    // Handle persistent ticket button triggers
-    } else if (interaction.isButton() && interaction.customId === "openIssueModal_btn") {
-        const modal = getIssueModal("");
+    // Handle persistent ticket select triggers
+    } else if (interaction.isStringSelectMenu() && interaction.customId === "openIssueModal_select") {
+        const selectedValue = interaction.values[0];
+        const modal = getIssueModal({ type: selectedValue, descriptionInitialValue: "" });
         await interaction.showModal(modal);
 
     // Pass generic modal submissions cleanly
-    } else if (interaction.isModalSubmit()) {
+    } else if (interaction.isModalSubmit() && interaction.customId.startsWith("AwesomeForm")) {
         await handleModalSubmit(interaction);
     }
 };

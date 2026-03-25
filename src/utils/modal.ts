@@ -3,37 +3,43 @@ import {
     ModalActionRowComponentBuilder,
     ModalBuilder,
     TextInputBuilder,
-    TextInputStyle,
+    TextInputStyle
 } from "discord.js";
 
-export const getIssueModal = (description: string) => {
-    const modal = new ModalBuilder()
-        .setTitle("Create github issue")
-        .setCustomId("AwesomeForm");
+export interface IssueModalDto {
+    type: string;
+    descriptionInitialValue: string;
+}
 
-    const requestType = new TextInputBuilder()
-        .setStyle(TextInputStyle.Short)
-        .setCustomId("requestType")
-        .setLabel("Request type (Fix, Feat, etc.)")
-        .setPlaceholder("e.g. Fix, Feat")
-        .setRequired(true);
+export const getIssueModal = (dto: IssueModalDto) => {
+    const { type, descriptionInitialValue } = dto;
+
+    const modal = new ModalBuilder()
+        .setTitle(`Create Issue - ${type}`)
+        .setCustomId(`AwesomeForm:${type}`);
 
     const issueTitle = new TextInputBuilder()
         .setStyle(TextInputStyle.Short)
         .setCustomId("issueTitle")
-        .setLabel("Issue title");
+        .setLabel("Issue title")
+        .setRequired(true);
 
     const issueDescription = new TextInputBuilder()
         .setStyle(TextInputStyle.Paragraph)
         .setCustomId("issueDescription")
         .setLabel("Issue description")
-        .setValue(description);
+        .setValue(descriptionInitialValue)
+        .setRequired(true);
 
-    const rows = [requestType, issueTitle, issueDescription].map((component) =>
-        new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(component)
+    const issueTitleRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+        issueTitle
     );
 
-    modal.addComponents(...rows);
+    const issueDescriptionRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+        issueDescription
+    );
+
+    modal.addComponents(issueTitleRow, issueDescriptionRow);
 
     return modal;
 };

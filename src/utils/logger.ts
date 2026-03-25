@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 
-// Ensure the logs directory exists
 const LOG_DIR = path.join(process.cwd(), "logs");
 if (!fs.existsSync(LOG_DIR)) {
     fs.mkdirSync(LOG_DIR);
@@ -9,7 +8,7 @@ if (!fs.existsSync(LOG_DIR)) {
 
 const getErrorLogFilePath = () => {
     const date = new Date();
-    const formattedDate = date.toISOString().split("T")[0]; // YYYY-MM-DD
+    const formattedDate = date.toISOString().split("T")[0];
     return path.join(LOG_DIR, `${formattedDate}-error.log`);
 };
 

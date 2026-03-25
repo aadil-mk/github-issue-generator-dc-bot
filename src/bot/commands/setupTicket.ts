@@ -1,4 +1,4 @@
-import { ApplicationCommandType, CommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel } from "discord.js";
+import { ApplicationCommandType, CommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel, StringSelectMenuBuilder } from "discord.js";
 import { COLOR } from "../../utils/colors";
 
 export default {
@@ -12,18 +12,19 @@ export default {
 
         const embed = new EmbedBuilder()
             .setTitle("🎫 Generate GitHub Issue")
-            .setDescription("Click the button below to fill out a ticket and automatically submit a new issue to our GitHub repository!")
+            .setDescription("Select the type of issue you'd like to create from the menu below to automatically submit a new report to our GitHub repository!")
             .setColor(COLOR.BLUE);
 
-        const button = new ButtonBuilder()
-            .setCustomId("openIssueModal_btn")
-            .setLabel("Create Issue")
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji("🐙");
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId("openIssueModal_select")
+            .setPlaceholder("Select request type to create issue")
+            .addOptions([
+                { label: "Bug Fix (FIX)", value: "FIX", description: "Report a bug or problem", emoji: "🐛" },
+                { label: "Feature (FEAT)", value: "FEAT", description: "Request a new feature", emoji: "✨" }
+            ]);
 
-        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+        const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
-        // Instantly reply to the slash command with the persistent button panel securely inside the channel!
         await interaction.reply({ 
             embeds: [embed], 
             components: [row] 
