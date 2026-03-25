@@ -66,4 +66,18 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           request_pty: true
-          script: "bash -c 'cd /home/rws/bot/github-issue-bot && git pull origin main && npm ci --omit=dev && npm run build && (pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot)'"
+          script: |
+            bash -lc '
+              export NVM_DIR="$HOME/.nvm"
+              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+              nvm use --lts
+
+              cd /home/rws/bot/github-issue-bot
+
+              git pull origin main
+              npm ci
+              npm run build
+
+              pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
+            '
