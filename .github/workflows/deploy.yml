@@ -68,7 +68,7 @@ jobs:
           script: |
             set -e
 
-            cd /home/rws/bot
+            cd /home/rws/bot/github-issue-bot
 
             echo "⬇️  Pulling latest changes..."
             git pull origin main
