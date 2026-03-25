@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual trigger"
+        required: false
+        default: "Manual run"
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    env:
+      # Secrets — set these under repo Settings > Secrets and variables > Actions > Secrets
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+
+      # Variables — set these under repo Settings > Secrets and variables > Actions > Variables
+      GUILD_ID: ${{ vars.GUILD_ID }}
+      GITHUB_USERNAME: ${{ vars.GITHUB_USERNAME }}
+      GITHUB_REPOSITORY: ${{ vars.GITHUB_REPOSITORY }}
+      DEVELOPER_IDS: ${{ vars.DEVELOPER_IDS }}
+      PREFIX: ${{ vars.PREFIX }}
+      PORT: ${{ vars.PORT }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run typecheck
+
+      - name: Run build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-node-${{ matrix.node-version }}
+          path: dist/
+          retention-days: 7
