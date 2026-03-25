@@ -66,4 +66,4 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           request_pty: true
-          script: "bash -c 'cd /bot/github-issue-bot && git pull origin main && npm ci --omit=dev && npm run build && (pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot)'"
+          script: "bash -c 'cd /home/rws/bot/github-issue-bot && git pull origin main && npm ci --omit=dev && npm run build && (pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot)'"
