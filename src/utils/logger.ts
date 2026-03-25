@@ -1,48 +1,63 @@
-import fs from "fs";
-import path from "path";
+import pino from "pino";
 
-const LOG_DIR = path.join(process.cwd(), "logs");
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR);
+const prettyTransport = pino.transport({
+  target: require.resolve("pino-pretty"),
+  options: {
+    colorize: true,
+    translateTime: "yyyy-mm-dd HH:mm:ss",
+    ignore: "pid,hostname",
+    singleLine: false,
+    hideObject: true,
+    customColors: "info:blue,warn:yellow,error:red",
+  },
+});
+
+const today = new Date();
+
+class Logger {
+  private _pinoLogger = pino(
+    { level: "debug" },
+    pino.multistream([
+      { level: "info", stream: prettyTransport },
+      {
+        level: "debug",
+        stream: pino.destination({
+          dest: `${process.cwd()}/logs/combined-${today.getFullYear()}.${
+            today.getMonth() + 1
+          }.${today.getDate()}.log`,
+          sync: true,
+          mkdir: true,
+        }),
+      },
+    ]),
+  );
+
+  success(content: string) {
+    this._pinoLogger.info(content);
+  }
+
+  log(content: string) {
+    this._pinoLogger.info(content);
+  }
+
+  warn(content: string) {
+    this._pinoLogger.warn(content);
+  }
+
+  error(content: string, ex?: unknown) {
+    if (ex) {
+      const msg = ex instanceof Error ? ex.message : String(ex);
+      this._pinoLogger.error(ex, `${content}: ${msg}`);
+    } else {
+      this._pinoLogger.error(content);
+    }
+  }
+
+  debug(content: string) {
+    this._pinoLogger.debug(content);
+  }
 }
 
-const getTimestamp = (): string => {
-  return new Date().toISOString();
-};
+const logger = new Logger();
 
-const getErrorLogFilePath = () => {
-  const date = new Date();
-  const formattedDate = date.toISOString().split("T")[0];
-  return path.join(LOG_DIR, `${formattedDate}-error.log`);
-};
-
-export const logger = {
-  info: (message: string) => {
-    console.log(`[INFO] [${getTimestamp()}] ${message}`);
-  },
-  warn: (message: string) => {
-    console.warn(`[WARN] [${getTimestamp()}] ${message}`);
-  },
-  error: (context: string, error?: unknown) => {
-    const timestamp = getTimestamp();
-
-    if (error) {
-      console.error(`[ERROR] [${timestamp}] ${context}`, error);
-    } else {
-      console.error(`[ERROR] [${timestamp}] ${context}`);
-    }
-
-    let errorMessage = "";
-    if (error) {
-      errorMessage =
-        error instanceof Error ? error.stack || error.message : String(error);
-    }
-
-    const logContent = `[${timestamp}] ${context}\n${errorMessage}\n\n`;
-
-    const filePath = getErrorLogFilePath();
-    fs.appendFile(filePath, logContent, (err) => {
-      if (err) console.error("Failed to write to log file:", err);
-    });
-  },
-};
+export default logger;

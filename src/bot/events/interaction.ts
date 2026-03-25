@@ -1,7 +1,7 @@
 import { Interaction, MessageFlags } from "discord.js";
 import { commands } from "../handlers/commandHandler";
 import { handleModalSubmit } from "../handlers/modalSubmit";
-import { logger } from "../../utils/logger";
+import logger from "../../utils/logger";
 import { getIssueModal } from "../../utils/modal";
 import { CUSTOM_IDS } from "../../utils/constants";
 
