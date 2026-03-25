@@ -66,6 +66,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            bash << 'EOF'
             set -e
 
             cd /home/rws/bot/github-issue-bot
@@ -83,3 +84,4 @@ jobs:
             pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
 
             echo "✅ Deploy complete!"
+            EOF
