@@ -1,3 +1,4 @@
+//* ====== Imports ====== *//
 import {
   ActionRowBuilder,
   Attachment,
@@ -22,22 +23,15 @@ import {
 import { COLOR } from "../../utils/colors";
 import { CUSTOM_IDS, LIMITS } from "../../utils/constants";
 import logger from "../../utils/logger";
-import { checkRateLimit, formatRemainingTime } from "../../utils/rateLimiter";
+import { checkIssueRateLimit, formatRemainingTime } from "../../utils/rateLimiter";
 
-export const handleModalSubmit = async (
-  interaction: ModalSubmitInteraction,
-) => {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+//* ====== Internal Logic Helpers ====== *//
 
-  const { fields, customId } = interaction;
-  const requestType = customId.split(":")[1] ?? "UNKNOWN";
-
-  const issueTitleRaw = fields.getTextInputValue("issueTitle");
-  const issueTitle = `[${requestType}] ${issueTitleRaw}`;
-  const issueDescription = fields.getTextInputValue("issueDescription");
-
-  // ── 1. Rate limit ──────────────────────────────────────────────────────────
-  const rateLimit = await checkRateLimit(interaction.user.id);
+/**
+ * Validates the user's rate limit for issue submissions.
+ */
+async function validateRateLimit(interaction: ModalSubmitInteraction): Promise<boolean> {
+  const rateLimit = await checkIssueRateLimit(interaction.user.id);
   if (rateLimit.limited) {
     await interaction.editReply({
       embeds: [
@@ -55,16 +49,21 @@ export const handleModalSubmit = async (
           .setTimestamp(),
       ],
     });
-    return;
+    return false;
   }
+  return true;
+}
 
-  // ── 2. Attachments via private thread (optional) ───────────────────────────
+/**
+ * Provides an optional attachment loop via a private thread.
+ */
+async function processAttachments(interaction: ModalSubmitInteraction): Promise<string[]> {
   const attachmentUrls: string[] = [];
-  // Private threads are only supported on TextChannel, not NewsChannel.
   const canCreateThread = interaction.channel instanceof TextChannel;
 
-  if (canCreateThread && interaction.channel) {
-    // Create a private thread only the submitter and the bot can see.
+  if (!canCreateThread || !interaction.channel) return attachmentUrls;
+
+  try {
     const thread = await (interaction.channel as TextChannel).threads.create({
       name: "📎 Issue Attachments",
       type: ChannelType.PrivateThread,
@@ -74,7 +73,6 @@ export const handleModalSubmit = async (
 
     await thread.members.add(interaction.user.id);
 
-    // Point the user to the thread via the ephemeral reply.
     await interaction.editReply({
       embeds: [
         new EmbedBuilder()
@@ -100,7 +98,6 @@ export const handleModalSubmit = async (
         .setStyle(ButtonStyle.Secondary),
     );
 
-    // Send the prompt inside the private thread.
     const promptMsg = await thread.send({
       content: `<@${interaction.user.id}>`,
       embeds: [
@@ -116,86 +113,63 @@ export const handleModalSubmit = async (
       components: [attachRow],
     });
 
-    try {
-      const collectedFiles: { url: string; name: string }[] = [];
+    const collectedFiles: { url: string; name: string }[] = [];
+    const msgCollector = thread.createMessageCollector({
+      filter: (m: Message) => m.author.id === interaction.user.id && m.attachments.size > 0,
+      time: LIMITS.ATTACHMENT_TIMEOUT_MS,
+    });
 
-      const msgCollector = thread.createMessageCollector({
-        filter: (m: Message) =>
-          m.author.id === interaction.user.id && m.attachments.size > 0,
-        time: LIMITS.ATTACHMENT_TIMEOUT_MS,
+    msgCollector.on("collect", (m: Message) => {
+      m.attachments.forEach((att: Attachment) => {
+        collectedFiles.push({ url: att.url, name: att.name });
+      });
+    });
+
+    const attachBtn = await promptMsg.awaitMessageComponent({
+      filter: (i) =>
+        i.user.id === interaction.user.id &&
+        ([CUSTOM_IDS.ATTACHMENT_DONE_BTN, CUSTOM_IDS.ATTACHMENT_SKIP_BTN] as string[]).includes(i.customId),
+      componentType: ComponentType.Button,
+      time: LIMITS.ATTACHMENT_TIMEOUT_MS,
+    });
+
+    msgCollector.stop();
+    await attachBtn.deferUpdate();
+
+    if (attachBtn.customId === CUSTOM_IDS.ATTACHMENT_DONE_BTN && collectedFiles.length > 0) {
+      await thread.send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("⏳ Uploading...")
+            .setDescription(`Uploading **${collectedFiles.length}** file(s) to GitHub...`)
+            .setColor(COLOR.BLUE),
+        ],
       });
 
-      msgCollector.on("collect", (m: Message) => {
-        m.attachments.forEach((att: Attachment) => {
-          collectedFiles.push({ url: att.url, name: att.name });
-        });
-      });
-
-      const attachBtn = await promptMsg.awaitMessageComponent({
-        filter: (i) =>
-          i.user.id === interaction.user.id &&
-          (
-            [
-              CUSTOM_IDS.ATTACHMENT_DONE_BTN,
-              CUSTOM_IDS.ATTACHMENT_SKIP_BTN,
-            ] as string[]
-          ).includes(i.customId),
-        componentType: ComponentType.Button,
-        time: LIMITS.ATTACHMENT_TIMEOUT_MS,
-      });
-
-      msgCollector.stop();
-      await attachBtn.deferUpdate();
-
-      if (
-        attachBtn.customId === CUSTOM_IDS.ATTACHMENT_DONE_BTN &&
-        collectedFiles.length > 0
-      ) {
-        await thread.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("⏳ Uploading...")
-              .setDescription(
-                `Uploading **${collectedFiles.length}** file(s) to GitHub...`,
-              )
-              .setColor(COLOR.BLUE),
-          ],
-        });
-
-        for (const file of collectedFiles) {
-          try {
-            attachmentUrls.push(
-              await uploadAttachmentToGithub(file.url, file.name),
-            );
-          } catch (err) {
-            logger.error(`Failed to upload attachment "${file.name}"`, err);
-          }
+      for (const file of collectedFiles) {
+        try {
+          attachmentUrls.push(await uploadAttachmentToGithub(file.url, file.name));
+        } catch (err) {
+          logger.error(`Failed to upload attachment "${file.name}"`, err);
         }
       }
-    } catch {
-      // Timeout or error — proceed without attachments.
-    } finally {
-      // Always clean up the thread regardless of outcome.
-      await thread
-        .delete()
-        .catch((err) =>
-          logger.error("Failed to delete attachment thread", err),
-        );
     }
+
+    await thread.delete().catch((err) => logger.error("Failed to delete attachment thread", err));
+  } catch (err) {
+    logger.error("Error in attachment processing loop", err);
   }
 
-  // ── 3. Build issue body ────────────────────────────────────────────────────
-  let issueBody = issueDescription;
+  return attachmentUrls;
+}
 
-  if (attachmentUrls.length > 0) {
-    issueBody +=
-      "\n\n---\n\n### 📎 Attachments\n\n" +
-      attachmentUrls
-        .map((url, i) => `![Attachment ${i + 1}](${url})`)
-        .join("\n\n");
-  }
-
-  // ── 4. Duplicate detection ─────────────────────────────────────────────────
+/**
+ * Checks for duplicate issues on GitHub and prompts the user to continue or cancel.
+ */
+async function checkDuplicateIssues(
+  interaction: ModalSubmitInteraction,
+  issueTitleRaw: string,
+): Promise<boolean> {
   try {
     const { data } = await searchGithubIssues(issueTitleRaw);
 
@@ -237,62 +211,67 @@ export const handleModalSubmit = async (
         components: [dupRow],
       });
 
-      try {
-        const replyMessage = (await interaction.fetchReply()) as Message;
+      const replyMessage = (await interaction.fetchReply()) as Message;
 
-        const dupBtn = await replyMessage.awaitMessageComponent({
-          filter: (i) =>
-            i.user.id === interaction.user.id &&
-            (
-              [
-                CUSTOM_IDS.DUPLICATE_CREATE_ANYWAY_BTN,
-                CUSTOM_IDS.DUPLICATE_CANCEL_BTN,
-              ] as string[]
-            ).includes(i.customId),
-          componentType: ComponentType.Button,
-          time: LIMITS.DUPLICATE_TIMEOUT_MS,
-        });
+      const dupBtn = await replyMessage.awaitMessageComponent({
+        filter: (i) =>
+          i.user.id === interaction.user.id &&
+          ([CUSTOM_IDS.DUPLICATE_CREATE_ANYWAY_BTN, CUSTOM_IDS.DUPLICATE_CANCEL_BTN] as string[]).includes(i.customId),
+        componentType: ComponentType.Button,
+        time: LIMITS.DUPLICATE_TIMEOUT_MS,
+      });
 
-        await dupBtn.deferUpdate();
+      await dupBtn.deferUpdate();
 
-        if (dupBtn.customId === CUSTOM_IDS.DUPLICATE_CANCEL_BTN) {
-          await interaction.editReply({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle("❌ Issue Creation Cancelled")
-                .setDescription(
-                  "Submission cancelled. Check the existing issues above — " +
-                    "a comment there is often more helpful than a duplicate.",
-                )
-                .setColor(COLOR.RED)
-                .setTimestamp(),
-            ],
-            components: [],
-          });
-          return;
-        }
-
-        await interaction.editReply({ components: [] });
-      } catch {
-        // Timed out waiting for duplicate response — cancel.
+      if (dupBtn.customId === CUSTOM_IDS.DUPLICATE_CANCEL_BTN) {
         await interaction.editReply({
           embeds: [
             new EmbedBuilder()
-              .setTitle("⏱️ Timed Out")
-              .setDescription("No response. Issue creation cancelled.")
+              .setTitle("❌ Issue Creation Cancelled")
+              .setDescription(
+                "Submission cancelled. Check the existing issues above — " +
+                  "a comment there is often more helpful than a duplicate.",
+              )
               .setColor(COLOR.RED)
               .setTimestamp(),
           ],
           components: [],
         });
-        return;
+        return false;
       }
-    }
-  } catch (err) {
-    logger.error("Duplicate search failed (non-fatal)", err);
-  }
 
-  // ── 5. Create issue ────────────────────────────────────────────────────────
+      await interaction.editReply({ components: [] });
+    }
+    return true;
+  } catch (err) {
+    if (err instanceof Error && err.name === "InteractionCollectorError") {
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("⏱️ Timed Out")
+            .setDescription("No response. Issue creation cancelled.")
+            .setColor(COLOR.RED)
+            .setTimestamp(),
+        ],
+        components: [],
+      });
+      return false;
+    }
+    logger.error("Duplicate search failed (non-fatal)", err);
+    return true; // Proceed if search fails
+  }
+}
+
+/**
+ * Creates the GitHub issue and notifies developers.
+ */
+async function finalizeIssueCreation(
+  interaction: ModalSubmitInteraction,
+  issueTitle: string,
+  issueBody: string,
+  issueDescription: string,
+  attachmentUrls: string[],
+) {
   try {
     await interaction.editReply({
       embeds: [
@@ -332,11 +311,9 @@ export const handleModalSubmit = async (
 
     await interaction.editReply({ embeds: [successEmbed] });
 
-    // DM configured developers.
     for (const devId of ENV.DEVELOPER_IDS) {
       try {
         const devUser = await interaction.client.users.fetch(devId);
-
         const dmEmbed = new EmbedBuilder()
           .setTitle("⚠️ New GitHub Issue Triggered")
           .setDescription(
@@ -352,7 +329,6 @@ export const handleModalSubmit = async (
             value: `${attachmentUrls.length} file(s) attached.`,
           });
         }
-
         await devUser.send({ embeds: [dmEmbed] });
       } catch (err) {
         logger.error(`Failed to DM developer ID: ${devId}`, err);
@@ -363,8 +339,39 @@ export const handleModalSubmit = async (
     await interaction.editReply({
       embeds: [],
       components: [],
-      content:
-        "❌ Something went wrong. Please try again or contact a developer.",
+      content: "❌ Something went wrong. Please try again or contact a developer.",
     });
   }
+}
+
+
+//* ====== Main Issue Modal Handler ====== *//
+export const handleIssueModal = async (interaction: ModalSubmitInteraction) => {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const { fields, customId } = interaction;
+  const requestType = customId.split(":")[1] ?? "UNKNOWN";
+  const issueTitleRaw = fields.getTextInputValue("issueTitle");
+  const issueTitle = `[${requestType}] ${issueTitleRaw}`;
+  const issueDescription = fields.getTextInputValue("issueDescription");
+
+  // 1. Rate Limiting
+  if (!(await validateRateLimit(interaction))) return;
+
+  // 2. Optional Attachments
+  const attachmentUrls = await processAttachments(interaction);
+
+  // 3. Duplicate Detection
+  if (!(await checkDuplicateIssues(interaction, issueTitleRaw))) return;
+
+  // 4. Construct Final Body
+  let issueBody = issueDescription;
+  if (attachmentUrls.length > 0) {
+    issueBody +=
+      "\n\n---\n\n### 📎 Attachments\n\n" +
+      attachmentUrls.map((url, i) => `![Attachment ${i + 1}](${url})`).join("\n\n");
+  }
+
+  // 5. Finalize Submission
+  await finalizeIssueCreation(interaction, issueTitle, issueBody, issueDescription, attachmentUrls);
 };

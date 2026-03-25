@@ -1,10 +1,12 @@
+//* ====== Imports ====== *//
 import { Interaction, MessageFlags } from "discord.js";
 import { commands } from "../handlers/commandHandler";
-import { handleModalSubmit } from "../handlers/modalSubmit";
+import { handleIssueModal } from "../handlers/issueModalHandler";
 import logger from "../../utils/logger";
 import { getIssueModal } from "../../utils/modal";
 import { CUSTOM_IDS } from "../../utils/constants";
 
+//* ====== Interaction Event Handler ====== *//
 export const handleInteraction = async (interaction: Interaction) => {
   if (
     interaction.isChatInputCommand() ||
@@ -40,6 +42,6 @@ export const handleInteraction = async (interaction: Interaction) => {
     interaction.isModalSubmit() &&
     interaction.customId.startsWith(CUSTOM_IDS.MODAL_PREFIX)
   ) {
-    await handleModalSubmit(interaction);
+    await handleIssueModal(interaction);
   }
 };

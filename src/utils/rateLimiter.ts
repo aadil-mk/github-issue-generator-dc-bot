@@ -9,7 +9,7 @@ export interface RateLimitResult {
 }
 
 /** Returns whether the user has hit the hourly submission cap. */
-export const checkRateLimit = async (
+export const checkIssueRateLimit = async (
   userId: string,
 ): Promise<RateLimitResult> => {
   const windowStart = new Date(Date.now() - LIMITS.RATE_LIMIT_WINDOW_MS);

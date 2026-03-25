@@ -1,9 +1,12 @@
+//* ====== Imports ====== *//
 import DiscordJS, { GatewayIntentBits, Events } from "discord.js";
 import { ENV } from "../config/env";
 import { loadCommands } from "../bot/handlers/commandHandler";
 import { handleReady } from "../bot/events/ready";
 import { handleInteraction } from "../bot/events/interaction";
+import logger from "../utils/logger";
 
+//* ====== Bot Startup Logic ====== *//
 export const startBot = async () => {
   const client = new DiscordJS.Client({
     intents: [
@@ -22,7 +25,7 @@ export const startBot = async () => {
   try {
     await client.login(ENV.BOT_TOKEN);
   } catch (error) {
-    console.error("[Bot] Failed to log in to Discord:", error);
+    logger.error("[Bot] Failed to log in to Discord:", error);
     throw error;
   }
 };

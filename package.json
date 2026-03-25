@@ -1,5 +1,5 @@
 {
-  "name": "github-issue-bot",
+  "name": "github-issue-generator-dc-bot",
   "version": "1.0.1",
   "main": "dist/index.js",
   "author": "EdenZyn",

@@ -1,5 +1,7 @@
+//* ====== Imports ====== *//
 import pino from "pino";
 
+//* ====== Transport Configuration ====== *//
 const prettyTransport = pino.transport({
   target: require.resolve("pino-pretty"),
   options: {
@@ -14,6 +16,7 @@ const prettyTransport = pino.transport({
 
 const today = new Date();
 
+//* ====== Logger Class Implementation ====== *//
 class Logger {
   private _pinoLogger = pino(
     { level: "debug" },
@@ -58,6 +61,7 @@ class Logger {
   }
 }
 
+//* ====== Logger Instance Export ====== *//
 const logger = new Logger();
 
 export default logger;
