@@ -65,23 +65,11 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          request_pty: true
+          script_stop: true
           script: |
-            bash << 'EOF'
-            set -e
-
-            cd /home/rws/bot/github-issue-bot
-
-            echo "⬇️  Pulling latest changes..."
+            cd /bot/github-issue-bot
             git pull origin main
-
-            echo "📦 Installing production dependencies..."
-            npm ci --omit=dev
-
-            echo "🔨 Building..."
+            npm ci
             npm run build
-
-            echo "♻️  Restarting with pm2..."
             pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
-
-            echo "✅ Deploy complete!"
-            EOF
