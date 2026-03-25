@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
 const server = app.listen(ENV.PORT, () => {
   logger.info(`Server is listening on port ${ENV.PORT}`);
 });
-
+// sad
 server.on("error", (err) => {
   logger.error("Express server error", err);
   process.exit(1);
