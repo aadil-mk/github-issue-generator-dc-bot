@@ -1,4 +1,4 @@
-import { Interaction } from "discord.js";
+import { Interaction, MessageFlags } from "discord.js";
 import { commands } from "../handlers/commandHandler";
 import { handleModalSubmit } from "../handlers/modalSubmit";
 import { logger } from "../../utils/logger";
@@ -20,12 +20,12 @@ export const handleInteraction = async (interaction: Interaction) => {
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
           content: "There was an error while executing this command!",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: "There was an error while executing this command!",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     }

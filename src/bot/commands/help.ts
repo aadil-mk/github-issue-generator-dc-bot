@@ -1,4 +1,9 @@
-import { ApplicationCommandType, Interaction, EmbedBuilder } from "discord.js";
+import {
+  ApplicationCommandType,
+  Interaction,
+  EmbedBuilder,
+  MessageFlags,
+} from "discord.js";
 import { COLOR } from "../../utils/colors";
 
 export default {
@@ -65,7 +70,7 @@ export default {
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

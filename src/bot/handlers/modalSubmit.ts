@@ -1,5 +1,5 @@
 import { logger } from "../../utils/logger";
-import { ModalSubmitInteraction, EmbedBuilder } from "discord.js";
+import { ModalSubmitInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { createGithubIssue } from "../../services/github";
 import { ENV } from "../../config/env";
 import { COLOR } from "../../utils/colors";
@@ -9,7 +9,7 @@ export const handleModalSubmit = async (
   interaction: ModalSubmitInteraction,
 ) => {
   // Acknowledge the interaction immediately to prevent the 3-second 'Unknown interaction' timeout error natively
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const { fields, customId } = interaction;
   const requestType = customId.split(":")[1] ?? "UNKNOWN";
