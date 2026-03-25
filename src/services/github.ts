@@ -2,15 +2,15 @@ import { Octokit } from "@octokit/rest";
 import { ENV } from "../config/env";
 
 const octokit = new Octokit({
-    auth: ENV.GITHUB_ACCESS_TOKEN,
-    baseUrl: "https://api.github.com",
+  auth: ENV.GT_ACCESS_TOKEN,
+  baseUrl: "https://api.github.com",
 });
 
 export const createGithubIssue = async (title: string, body: string) => {
-    return octokit.rest.issues.create({
-        owner: ENV.GITHUB_USERNAME,
-        repo: ENV.GITHUB_REPOSITORY,
-        title,
-        body,
-    });
+  return octokit.rest.issues.create({
+    owner: ENV.GT_USERNAME,
+    repo: ENV.GT_REPOSITORY,
+    title,
+    body,
+  });
 };

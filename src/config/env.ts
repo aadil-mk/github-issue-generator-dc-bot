@@ -5,9 +5,9 @@ dotenv.config();
 const REQUIRED_VARS = [
   "BOT_TOKEN",
   "GUILD_ID",
-  "GITHUB_ACCESS_TOKEN",
-  "GITHUB_USERNAME",
-  "GITHUB_REPOSITORY",
+  "GT_ACCESS_TOKEN",
+  "GT_USERNAME",
+  "GT_REPOSITORY",
   "MONGODB_URI",
   "DEVELOPER_IDS",
 ] as const;
@@ -36,13 +36,13 @@ export const ENV = {
   GUILD_ID: process.env.GUILD_ID as string,
 
   /** GitHub personal access token used to authenticate API requests. */
-  GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN as string,
+  GT_ACCESS_TOKEN: process.env.GT_ACCESS_TOKEN as string,
 
   /** GitHub username that owns the target repository. */
-  GITHUB_USERNAME: process.env.GITHUB_USERNAME as string,
+  GT_USERNAME: process.env.GT_USERNAME as string,
 
   /** GitHub repository name where issues will be managed. */
-  GITHUB_REPOSITORY: process.env.GITHUB_REPOSITORY as string,
+  GT_REPOSITORY: process.env.GT_REPOSITORY as string,
 
   /** Command prefix for bot commands. Defaults to "/" if not set. */
   PREFIX: process.env.PREFIX || "/",
