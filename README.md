@@ -151,5 +151,3 @@ src/
 | HTTP server | `express` |
 | Language | TypeScript 5 on Node >= 20 |
 ```
-
-Now let me apply this to the actual file:

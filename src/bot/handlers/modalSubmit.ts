@@ -6,13 +6,13 @@ import { COLOR } from "../../utils/colors";
 import { Issue } from "../../models/Issue/Issue";
 
 export const handleModalSubmit = async (
-  interaction: ModalSubmitInteraction
+  interaction: ModalSubmitInteraction,
 ) => {
   // Acknowledge the interaction immediately to prevent the 3-second 'Unknown interaction' timeout error natively
   await interaction.deferReply({ ephemeral: true });
 
   const { fields, customId } = interaction;
-  const requestType = customId.split(":")[1];
+  const requestType = customId.split(":")[1] ?? "UNKNOWN";
 
   const issueTitleRaw = fields.getTextInputValue("issueTitle");
   const issueTitle = `[${requestType}] ${issueTitleRaw}`;
@@ -26,25 +26,23 @@ export const handleModalSubmit = async (
       requestedById: interaction.user.id,
       requestedByUsername: interaction.user.username,
       title: issueTitle,
-      description: issueDescription
+      description: issueDescription,
     });
 
-    const devIds = String(ENV.DEVELOPER_IDS)
-      .split(",")
-      .map((id) => id.trim())
-      .filter(Boolean);
+    // ENV.DEVELOPER_IDS is already a string[] parsed at startup — no inline splitting needed
+    const devIds = ENV.DEVELOPER_IDS;
 
     const embed = new EmbedBuilder()
       .setTitle("✅ Issue Created Successfully")
       .setDescription(
-        `Your issue **${issueTitle}** has been forwarded to our developers.\nThank you for your feedback!`
+        `Your issue **${issueTitle}** has been forwarded to our developers.\nThank you for your feedback!`,
       )
       .setColor(COLOR.GREEN)
       .setTimestamp();
 
     // Edit the original ephemeral loading state natively
     await interaction.editReply({
-      embeds: [embed]
+      embeds: [embed],
     });
 
     // Dispatch direct DMs to every configured developer mapping securely
@@ -56,7 +54,7 @@ export const handleModalSubmit = async (
             const dmEmbed = new EmbedBuilder()
               .setTitle("⚠️ New GitHub Issue Triggered")
               .setDescription(
-                `A new issue has just been opened by <@${interaction.user.id}>!\n\n**${issueTitle}**\n\n[Click securely to view this issue on GitHub](${res.data.html_url})`
+                `A new issue has just been opened by <@${interaction.user.id}>!\n\n**${issueTitle}**\n\n[Click securely to view this issue on GitHub](${res.data.html_url})`,
               )
               .setColor(COLOR.BLUE);
 
@@ -65,7 +63,7 @@ export const handleModalSubmit = async (
         } catch (dmError) {
           logger.error(
             `Failed to dispatch DM to Developer ID: ${devId}`,
-            dmError
+            dmError,
           );
         }
       }
