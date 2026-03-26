@@ -11,9 +11,9 @@ export const CUSTOM_IDS = {
 export const LIMITS = {
   RATE_LIMIT_MAX: 5, // max issues per user per window
   RATE_LIMIT_WINDOW_MS: 60 * 60 * 1_000, // 1 hour
-  ATTACHMENT_TIMEOUT_MS: 60_000, // 60s to upload files
-  DUPLICATE_TIMEOUT_MS: 30_000, // 30s to respond to duplicate warning
-  MAX_ATTACHMENT_BYTES: 5 * 1024 * 1024, // 5 MB
+  ATTACHMENT_TIMEOUT_MS: 60_000 * 3, // 3 minutes to upload files
+  DUPLICATE_TIMEOUT_MS: 60_000, // 1 minute to respond to duplicate warning
+  MAX_ATTACHMENT_BYTES: 10 * 1024 * 1024, // 10 MB
 } as const;
 
 // Where attachments are stored in the GitHub repo.

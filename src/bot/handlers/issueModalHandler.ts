@@ -113,6 +113,17 @@ async function processAttachments(interaction: ModalSubmitInteraction): Promise<
       components: [attachRow],
     });
 
+    await interaction.user
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("📎 Attachment Thread Created")
+            .setDescription(`Navigate to your private attachment thread here: ${thread.url}`)
+            .setColor(COLOR.BLUE),
+        ],
+      })
+      .catch(() => logger.warn(`Failed to send attachment DM to user ${interaction.user.id}`));
+
     const collectedFiles: { url: string; name: string }[] = [];
     const msgCollector = thread.createMessageCollector({
       filter: (m: Message) => m.author.id === interaction.user.id && m.attachments.size > 0,
