@@ -48,20 +48,29 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          request_pty: true
           script: |
-            bash -lc '
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            export NVM_DIR="$HOME/.nvm"
+            . "$NVM_DIR/nvm.sh"
 
-              nvm use --lts
+            nvm use 20
 
-              cd /home/rws/bot/github-issue-bot
+            cd /home/rws/bot/github-issue-bot
 
-              git pull origin main
-              npm ci
-              npm run build
+            echo "Pulling latest code..."
+            git pull origin main
 
-              pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
-            '
+            echo "Installing deps..."
+            npm ci --no-audit --no-fund
+
+            echo "Building..."
+            npm run build
+
+            echo "Restarting PM2..."
+            pm2 delete github-issue-bot || true
+            pm2 start dist/index.js --name github-issue-bot
+
+            echo "Saving PM2..."
+            pm2 save
+
+            echo "Done ✅"
 
