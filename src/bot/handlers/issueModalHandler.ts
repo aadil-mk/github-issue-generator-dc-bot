@@ -106,7 +106,7 @@ async function processAttachments(interaction: ModalSubmitInteraction): Promise<
           .setDescription(
             "Drop your screenshots or files in this thread, then click **Done ✅**.\n" +
               "Click **Skip →** to submit without attachments.\n\n" +
-              `*Times out in 60s · Max ${LIMITS.MAX_ATTACHMENT_BYTES / (1024 * 1024)} MB per file.*`,
+              `*Times out in ${LIMITS.ATTACHMENT_TIMEOUT_MS / 1000}s · Max ${LIMITS.MAX_ATTACHMENT_BYTES / (1024 * 1024)} MB per file.*`,
           )
           .setColor(COLOR.BLUE),
       ],

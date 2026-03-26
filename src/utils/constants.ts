@@ -21,3 +21,5 @@ export const GITHUB_ASSETS = {
   FOLDER: "issue-assets",
   COMMIT_MESSAGE: "chore: add issue asset",
 } as const;
+
+export const PUBLIC_COMMANDS = ["help", "info"] as const;

@@ -9,62 +9,45 @@ import { COLOR } from "../../utils/colors";
 export default {
   data: {
     name: "help",
-    description: "Learn how to use the GitHub Issue Bot",
+    description: "Learn how to submit a GitHub issue",
     type: ApplicationCommandType.ChatInput,
   },
   async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("📘 GitHub Issue Bot — Help Guide")
+      .setTitle("📘 GitHub Issue Bot — User Guide")
       .setDescription(
-        "This bot lets you create GitHub issues directly from Discord. " +
-          "Below are all the available ways to interact with the bot.",
+        "Follow these steps to report bugs or request new features directly to our team.",
       )
       .setColor(COLOR.BLUE)
       .addFields(
         {
-          name: "⚙️ `/setup-ticket`",
+          name: "🚀 1. Start a Submission",
           value:
-            "Posts a persistent panel in the current channel with a **dropdown menu**.\n" +
-            "Team members can select an issue type and fill in a form to submit a GitHub issue — " +
-            "no slash commands needed after setup.\n\n" +
-            "**Issue types available:**\n" +
-            "🐛 **Bug Fix (FIX)** — Report a bug or problem\n" +
-            "✨ **Feature (FEAT)** — Request a new feature",
+            "Go to the **issue-reporting** channel and select an issue type (🐛 Bug or ✨ Feature) from the dropdown ticket panel.",
         },
         {
-          name: "❓ `/help`",
-          value: "Displays this help message.",
+          name: "📝 2. Fill the Form",
+          value:
+            "A form will pop up. Enter a clear **Title** and a detailed **Description** of your request, then click **Submit**.",
         },
         {
-          name: "📋 How Issue Submission Works",
+          name: "📎 3. Add Attachments (Private Thread)",
           value:
-            "1. Select an issue type from the dropdown in a ticket panel.\n" +
-            "2. A modal (form) will pop up asking for:\n" +
-            "   • **Issue Title** — A short summary\n" +
-            "   • **Issue Description** — A detailed explanation\n" +
-            "3. Submit the form — the issue is automatically created on GitHub " +
-            "with a `[FIX]` or `[FEAT]` prefix on the title.\n" +
-            "4. You'll receive a confirmation embed once the issue is live.",
+            "Once submitted, I'll create a **private thread** and send you a DM/mention. " +
+            "Upload your files there, then click **Done ✅** to complete the report.\n\n" +
+            "*Note: This thread is private and only visible to you and the developers.*",
         },
         {
-          name: "🔔 Developer Notifications",
+          name: "✅ 4. You're Done!",
           value:
-            "When an issue is submitted, all configured developers are automatically " +
-            "notified via **Direct Message** with a link to the newly created GitHub issue.",
-        },
-        {
-          name: "🗄️ Issue Logging",
-          value:
-            "Every submitted issue is saved to the database, recording:\n" +
-            "• Issue title & description\n" +
-            "• Link to the GitHub issue\n" +
-            "• Discord username & user ID of the submitter",
+            "You'll get a confirmation message once the issue is live on GitHub. " +
+            "Our developers will be notified automatically!",
         },
       )
       .setFooter({
-        text: "GitHub Issue Bot • Issues are submitted directly to the configured repository",
+        text: "Need more help? Contact one of our developers.",
       })
       .setTimestamp();
 
