@@ -49,31 +49,33 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            export NVM_DIR="$HOME/.nvm"
-            . "$NVM_DIR/nvm.sh"
+            bash -lc '
+              export NVM_DIR="$HOME/.nvm"
+              . "$NVM_DIR/nvm.sh"
 
-            nvm use 20
+              nvm use 20
 
-            cd /home/rws/bot/github-issue-bot
+              cd /home/rws/bot/github-issue-bot
 
-            echo "Pulling latest code..."
-            git pull origin main
+              echo "Pulling latest code..."
+              git fetch origin
+              git reset --hard origin/main
 
-            echo "Installing deps..."
-            npm ci --no-audit --no-fund
+              echo "Installing deps..."
+              npm ci --no-audit --no-fund
 
-            echo "Building..."
-            npm run build
+              echo "Building..."
+              npm run build
 
-            echo "Restarting PM2..."
-            pm2 delete github-issue-bot || true
-            pm2 start dist/index.js --name github-issue-bot
+              echo "Restarting PM2..."
+              pm2 delete github-issue-bot || true
+              pm2 start dist/index.js --name github-issue-bot
 
-            echo "Saving PM2..."
-            pm2 save
+              echo "Saving PM2..."
+              pm2 save
 
-            echo "Showing PM2 status..."
-            pm2 status
+              echo "Showing PM2 status..."
+              pm2 status
 
-            echo "Done ✅"
-
+              echo "Done ✅"
+            '
