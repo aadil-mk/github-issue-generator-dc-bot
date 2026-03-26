@@ -51,16 +51,22 @@ jobs:
           request_pty: true
           script: |
             bash -lc '
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            set -ex  # This will show exactly which command is hanging
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-              nvm use --lts
+            nvm use --lts
 
-              cd /home/rws/bot/github-issue-bot
+            cd /home/***/bot/github-issue-bot
 
-              git pull origin main
-              npm ci
-              npm run build
+            # 1. Use -o StrictHostKeyChecking=no to avoid the "yes/no" prompt
+            # 2. Ensure your git remote uses SSH if you are using keys, or a Token for HTTPS
+            GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git pull origin main
 
-              pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
-            '
+            npm ci
+            npm run build
+
+            # Restart using pm2
+            pm2 restart github-issue-bot || pm2 start dist/index.js --name github-issue-bot
+          '
+
