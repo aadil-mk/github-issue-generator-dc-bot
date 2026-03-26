@@ -72,5 +72,8 @@ jobs:
             echo "Saving PM2..."
             pm2 save
 
+            echo "Showing PM2 status..."
+            pm2 status
+
             echo "Done ✅"
 
