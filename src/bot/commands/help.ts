@@ -53,7 +53,6 @@ export default {
 
     await interaction.reply({
       embeds: [embed],
-      flags: MessageFlags.Ephemeral,
     });
   },
 };
