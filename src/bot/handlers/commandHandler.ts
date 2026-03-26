@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { Collection, Interaction, ApplicationCommandData } from "discord.js";
-import { logger } from "../../utils/logger";
+import logger from "../../utils/logger";
 
 export interface Command {
   data: ApplicationCommandData;

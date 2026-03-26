@@ -1,45 +1,44 @@
 # Discord GitHub Issues Bot
 
-Create GitHub issues directly from Discord — without ever leaving the app.
+Create GitHub issues directly from Discord — without ever leaving the app. Built with a modular, production-grade architecture.
 
 ---
 
-## Features
+## 🚀 Features
 
-- `/setup-ticket` — Posts a persistent dropdown panel in any channel. Team members pick an issue type and fill in a form; the issue lands on GitHub automatically.
-- `/help` — Displays a full in-Discord guide to using the bot.
-- **Issue types** — 🐛 Bug Fix `[FIX]` and ✨ Feature Request `[FEAT]`, prefixed automatically on the GitHub issue title.
-- **Developer notifications** — Configured developers receive a DM with a link every time a new issue is submitted.
-- **Issue logging** — Every submission is persisted to MongoDB (submitter, title, description, GitHub link).
+- **`/setup-ticket`** — Posts a persistent dropdown panel. Team members pick an issue type and fill in a digital form.
+- **`/info`** — View bot statistics, system resources (RAM/CPU), and uptime.
+- **`/setup-help`** — Developer-only guide for managing the bot and permissions.
+- **`/help`** — User guide for reporting issues.
+- **🛡️ Rate Limiting** — Prevents spam by limiting users to 3 submissions per hour.
+- **🔍 Duplicate Detection** — Automatically searches GitHub for similar issues before creating a new one to reduce noise.
+- **📎 Attachment Support** — Generates a private thread for users to upload screenshots/files, which are then mirrored directly to the GitHub issue.
+- **Developer DMs** — Configured developers receive instant DM notifications with links to new issues.
+- **Persistence** — All submissions are logged to MongoDB for audit trails.
 
 ---
 
-## Prerequisites
+## 🛠 Prerequisites
 
 - **Node.js** >= 20.0.0
 - **npm** >= 9
-- A **MongoDB** instance (local or cloud, e.g. MongoDB Atlas)
+- A **MongoDB** instance (local or Atlas)
 - A **Discord application & bot** — [Discord Developer Portal](https://discord.com/developers/applications)
 - A **GitHub Personal Access Token** with `repo` scope — [Creating a token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
 ---
 
-## Setup
+## ⚙️ Setup
 
-### 1. Clone the repository
+### 1. Clone & Install
 
 ```sh
 git clone https://github.com/your-username/github-issue-bot.git
 cd github-issue-bot
-```
-
-### 2. Install dependencies
-
-```sh
 npm install
 ```
 
-### 3. Configure environment variables
+### 2. Configure Environment
 
 Copy the example env file and fill in your values:
 
@@ -49,105 +48,60 @@ cp .env.example .env
 
 | Variable | Required | Description |
 |---|---|---|
-| `BOT_TOKEN` | ✅ | Your Discord bot token. Found in the [Developer Portal](https://discord.com/developers/applications) under your app → Bot. |
-| `GUILD_ID` | ✅ | Your Discord server ID. Right-click the server name → **Copy Server ID** (enable Developer Mode in Discord settings first). |
-| `GITHUB_ACCESS_TOKEN` | ✅ | A GitHub Personal Access Token with `repo` scope. |
-| `GITHUB_USERNAME` | ✅ | The GitHub organization or username that owns the target repository. e.g. `mdshamoon` from `github.com/mdshamoon/glific-frontend`. |
-| `GITHUB_REPOSITORY` | ✅ | The target repository name. e.g. `glific-frontend` from `github.com/mdshamoon/glific-frontend`. |
-| `MONGODB_URI` | ✅ | MongoDB connection string. e.g. `mongodb://localhost:27017/issuebot` or a MongoDB Atlas URI. |
-| `DEVELOPER_IDS` | ✅ | Comma-separated Discord user IDs to DM when an issue is created. e.g. `123456789,987654321`. Right-click a user → **Copy User ID** to get their ID. |
-| `PREFIX` | ❌ | Command prefix (default: `/`). Not used by slash commands — can be left blank. |
-
-### 4. Invite the bot to your server
-
-Generate an invite URL in the [Developer Portal](https://discord.com/developers/applications) under your app → OAuth2 → URL Generator. Select the following scopes and permissions:
-
-**Scopes:** `bot`, `applications.commands`
-
-**Bot permissions:** `Send Messages`, `Use Slash Commands`, `Embed Links`
+| `BOT_TOKEN` | ✅ | Your Discord bot token. |
+| `GUILD_ID` | ✅ | Your Discord server ID. |
+| `GT_ACCESS_TOKEN` | ✅ | GitHub Personal Access Token (`repo` scope). |
+| `GT_USERNAME` | ✅ | GitHub owner (user or org). |
+| `GT_REPOSITORY` | ✅ | Target repository name. |
+| `MONGODB_URI` | ✅ | MongoDB connection string. |
+| `DEVELOPER_IDS` | ✅ | Comma-separated Discord User IDs for DMs & Admin commands. |
+| `PORT` | ❌ | HTTP server port (default: 7000). |
 
 ---
 
-## Running the bot
+## 🏃 Running the bot
 
 ### Development
-
-Runs directly with `ts-node` — no build step needed:
-
 ```sh
 npm run dev
 ```
 
 ### Production
-
-Compile TypeScript first, then run the compiled output:
-
 ```sh
 npm run build
 npm start
 ```
 
-### Type checking only (no emit)
-
-```sh
-npm run typecheck
-```
-
 ---
 
-## Usage
-
-Once the bot is running and invited to your server:
-
-1. Run `/setup-ticket` in the channel where you want the panel to live.
-2. A dropdown menu will appear — select **Bug Fix (FIX)** or **Feature (FEAT)**.
-3. Fill in the **Issue Title** and **Issue Description** in the modal that pops up.
-4. Submit — the issue is created on GitHub instantly, you get a confirmation embed, and all configured developers are notified via DM.
-
-Run `/help` at any time for a full in-Discord guide.
-
----
-
-## Project structure
+## 📂 Project Structure
 
 ```
 src/
 ├── bot/
-│   ├── commands/
-│   │   ├── help.ts          # /help slash command
-│   │   └── setupTicket.ts   # /setup-ticket slash command
-│   ├── events/
-│   │   ├── interaction.ts   # Routes all incoming interactions
-│   │   └── ready.ts         # Registers commands on startup
-│   └── handlers/
-│       ├── commandHandler.ts  # Loads command files dynamically
-│       └── modalSubmit.ts     # Handles form submission & GitHub API call
+│   ├── commands/        # Slash command definitions (info, help, setup, etc.)
+│   ├── events/          # Gateway events (ready, interactionCreate)
+│   └── handlers/        # Business logic (issueModalHandler, commandHandler)
 ├── config/
-│   ├── database.ts          # MongoDB connection
-│   └── env.ts               # Typed environment variable map
+│   ├── database.ts      # MongoDB connection
+│   └── env.ts           # Typed environment validation
 ├── models/
-│   └── Issue/
-│       ├── IIssue.ts        # Issue interface
-│       └── Issue.ts         # Mongoose model
+│   └── Issue/           # Mongoose schemas & interfaces
 ├── services/
-│   ├── bot.ts               # Discord client setup
-│   └── github.ts            # Octokit GitHub API wrapper
-├── utils/
-│   ├── colors.ts            # Shared embed color constants
-│   ├── logger.ts            # Logger utility
-│   └── modal.ts             # Issue modal builder
-└── index.ts                 # Entry point (Express + bot boot)
+│   ├── bot.ts           # Discord client initialization
+│   └── github.ts        # Octokit & GitHub API logic
+├── utils/               # Shared utilities (rateLimiter, logger, colors)
+└── index.ts             # Main entry point (Express + Boot)
 ```
 
 ---
 
-## Tech stack
+## 🏗 Tech Stack
 
-| | Package |
-|---|---|
-| Discord | `discord.js` v14 |
-| GitHub API | `@octokit/rest` |
-| Database | `mongoose` + MongoDB |
-| HTTP server | `express` |
-| Language | TypeScript 5 on Node >= 20 |
+- **Discord:** `discord.js` v14
+- **GitHub:** `@octokit/rest`
+- **Database:** `mongoose` + MongoDB
+- **Logging:** `pino` + `pino-pretty`
+- **Language:** TypeScript 5
+
 ```

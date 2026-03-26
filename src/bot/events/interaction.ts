@@ -1,15 +1,24 @@
+//* ====== Imports ====== *//
 import { Interaction, MessageFlags } from "discord.js";
 import { commands } from "../handlers/commandHandler";
-import { handleModalSubmit } from "../handlers/modalSubmit";
-import { logger } from "../../utils/logger";
+import { handleIssueModal } from "../handlers/issueModalHandler";
+import { ENV } from "../../config/env";
+import logger from "../../utils/logger";
 import { getIssueModal } from "../../utils/modal";
-import { CUSTOM_IDS } from "../../utils/constants";
+import { CUSTOM_IDS, PUBLIC_COMMANDS } from "../../utils/constants";
 
+//* ====== Interaction Event Handler ====== *//
 export const handleInteraction = async (interaction: Interaction) => {
-  if (
-    interaction.isChatInputCommand() ||
-    interaction.isMessageContextMenuCommand()
-  ) {
+  if (interaction.isChatInputCommand() || interaction.isMessageContextMenuCommand()) {
+    const isPublicCmd = (PUBLIC_COMMANDS as readonly string[]).includes(interaction.commandName);
+
+    if (!isPublicCmd && !ENV.DEVELOPER_IDS.includes(interaction.user.id)) {
+      return interaction.reply({
+        content: "🚫 **Access Denied:** You do not have permission to use this bot's management commands.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
     const command = commands.get(interaction.commandName);
     if (!command) return;
 
@@ -40,6 +49,6 @@ export const handleInteraction = async (interaction: Interaction) => {
     interaction.isModalSubmit() &&
     interaction.customId.startsWith(CUSTOM_IDS.MODAL_PREFIX)
   ) {
-    await handleModalSubmit(interaction);
+    await handleIssueModal(interaction);
   }
 };

@@ -1,7 +1,10 @@
+//* ====== Imports ====== *//
 import dotenv from "dotenv";
+import logger from "../utils/logger";
 
 dotenv.config();
 
+//* ====== Required Variables Validation ====== *//
 const REQUIRED_VARS = [
   "BOT_TOKEN",
   "GUILD_ID",
@@ -17,14 +20,15 @@ const missing = REQUIRED_VARS.filter(
 );
 
 if (missing.length > 0) {
-  console.error("❌ Missing required environment variables:");
-  missing.forEach((key) => console.error(`   - ${key}`));
-  console.error(
-    "\nPlease define the above variables in your .env file or environment before starting the bot.",
+  logger.error("❌ Missing required environment variables:");
+  missing.forEach((key) => logger.error(`   - ${key}`));
+  logger.error(
+    "Please define the above variables in your .env file or environment before starting the bot.",
   );
   process.exit(1);
 }
 
+//* ====== Environment Object Export ====== *//
 export const ENV = {
   /** Port the HTTP server listens on. Defaults to 7000 if not set. */
   PORT: Number(process.env.PORT) || 7000,
@@ -43,9 +47,6 @@ export const ENV = {
 
   /** GitHub repository name where issues will be managed. */
   GT_REPOSITORY: process.env.GT_REPOSITORY as string,
-
-  /** Command prefix for bot commands. Defaults to "/" if not set. */
-  PREFIX: process.env.PREFIX || "/",
 
   /**
    * Comma-separated list of Discord user IDs with developer-level privileges.

@@ -1,10 +1,12 @@
+//* ====== Imports ====== *//
 import { Client } from "discord.js";
 import { ENV } from "../../config/env";
 import { commands } from "../handlers/commandHandler";
-import { logger } from "../../utils/logger";
+import logger from "../../utils/logger";
 
+//* ====== Ready Event Handler ====== *//
 export const handleReady = async (client: Client) => {
-  logger.info("⏳ Registering commands ");
+  logger.log("⏳ Registering commands...");
   const guildId = ENV.GUILD_ID;
 
   const guild = client.guilds.cache.get(guildId);
@@ -14,7 +16,7 @@ export const handleReady = async (client: Client) => {
   if (commandsData.length > 0) {
     try {
       await slashCommands?.set(commandsData);
-      logger.info("✅ Commands successfully registered!");
+      logger.log("✅ Commands successfully registered!");
     } catch (err) {
       logger.error("Failed to register commands", err);
     }
